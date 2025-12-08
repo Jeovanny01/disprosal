@@ -610,6 +610,21 @@ async function  saveArticulo(event) {
           IMAGEN=null;
         return; // Sale de la función para que no continúe
     } 
+
+
+      const productoEncontradoItems = buscarItems(articulo);
+
+    if (productoEncontradoItems) {
+        // Si el producto existe, detén el escáner y muestra un mensaje
+        alert(`Producto encontrado en items: ${productoEncontradoItems.ARTICULO}, NOMBRE: ${productoEncontradoItems.DESCRIPCION}`);
+          // Limpiar el formulario
+          document.getElementById('formRegistrar').reset();  // 'miFormulario' es el ID del formulario
+          document.getElementById('btn-quitar').style.display = 'none';  // Ocultar el botón
+          IMAGEN=null;
+        return; // Sale de la función para que no continúe
+    } 
+
+
    // const usuario = "sa";
    
         // Envía los datos al backend mediante fetch
