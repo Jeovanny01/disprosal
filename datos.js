@@ -307,7 +307,13 @@ function buscarProductoPreacio(codigo) {
 }
 
 function buscarItems(codigo) {
-    return productos.find(producto => producto.ITEM.toUpperCase()  === codigo.trim().toUpperCase() );
+ // 1. Validación de seguridad: Si no hay codigo, retorna null inmediatamente
+    if (!codigo) return null;
+
+    // 2. Uso de Optional Chaining (?.) para proteger la propiedad del producto
+    return productos.find(producto => 
+        producto.ITEM?.toUpperCase() === codigo.trim().toUpperCase()
+    );
 }
 
 async function  ActualizaCortes(){
