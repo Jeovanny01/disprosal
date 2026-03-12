@@ -1,6 +1,6 @@
 const url = "https://apitest.grupocarosa.com/ApiDatos/"
-let empresa ="SARIEM";
-let bd ="SARIEM";
+let empresa ="DISPROSAL";
+let bd ="DISPROSAL";
 let IMAGEN = null
 let IMAGENEDIT = null
 let user
@@ -14,7 +14,6 @@ let sucursalTabla = [];
 let categoriaTabla = [];
 let clientesTabla = [];
 let cotizacionesTabla =[];
-
 let codCliente1,codCliente2,codCliente3
 let ventaTotal=0;
 
@@ -2123,6 +2122,9 @@ async function fetchData() {
         console.error('Error al obtener los datos:', error);
     }
 }
+
+
+
 async function fetchDataPrecios(cliente) {
     try {
         // Llama al endpoint con las fechas como parámetros

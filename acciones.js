@@ -77,6 +77,7 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById("registrosInv1").style.display = "block";
         document.getElementById("cotizaciones1").style.display = "block";
         document.getElementById("das").style.display = "block";
+        
     } 
     if (session.userRole === "3" ) {
         document.getElementById("register1").style.display = "block";
@@ -99,6 +100,12 @@ document.addEventListener('DOMContentLoaded', () => {
     codCliente2 = localStorage.getItem("codCliente2") || "CLIENTE"
     codCliente3 = localStorage.getItem("codCliente3") || "CLIENTE"
 
+//   if (session.userRole === "1" ) {
+//         fetchDataExistenciaTotal();
+//         fetchDataCxC();
+//         fetchDataCxP();
+
+//   }
       
             // pedidoTabla3 = pedidoTabla
             // codCliente3 = "CLIENTE"

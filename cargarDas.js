@@ -1,7 +1,23 @@
+   let existenciasTotal =[];
+   let cuentasCxC =[];
+   let cuentasCxP =[];
+
 document.addEventListener("DOMContentLoaded", () => {
     cargarDatos2(document.getElementById('startDate').value,
     document.getElementById('endDate').value) 
+actualizar();
+Promise.all([
+    fetchDataExistenciaTotal(),
+    fetchDataCxC(),
+    fetchDataCxP()
+]).then(() => {
+    console.log("¡Todos los datos cargados!");
     actualizar();
+}).catch(error => {
+    console.error("Algo falló en una de las cargas", error);
+});
+
+
 });
 function actualizar(){
     const data = JSON.parse(localStorage.getItem("tablaDatos")) || [];
@@ -12,6 +28,10 @@ function actualizar(){
 // 2. NUEVO: Gráfico de Sucursales
     const datosSucursal = procesarDatosSucursal(data);
     crearGraficoSucursales(datosSucursal);
+    //3
+
+    const datosSucursalInv = procesarDatosSucursalInv(existenciasTotal);
+    crearGraficoSucursalesInv(datosSucursalInv);
 
     //     // Procesar datos para el gráfico
     // const conteoPorVendedor = procesarDatosParaGrafico(data);
@@ -28,6 +48,81 @@ function actualizar(){
     // crearGraficoBarrasIdiomas(conteo);
 }
  
+    async function fetchDataExistenciaTotal() {
+    try {
+        // Llama al endpoint con las fechas como parámetros
+        const response = await fetch(url + "selectExistenciasTotal", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+              bd,  empresa
+            })
+        });
+
+        if (!response.ok) throw new Error('Error al obtener los datos.');
+        const data = await response.json();
+        if (data && data.length > 0) {
+        existenciasTotal =data
+        // // Genera la tabla y la inserta en la sección "datos"
+      
+        //     generarTabla(data);
+        //     generarTabla5(data);
+     
+
+        }
+    } catch (error) {
+        console.error('Error al obtener los datos:', error);
+    }
+}
+async function fetchDataCxC() {
+    try {
+        // Llama al endpoint con las fechas como parámetros
+        const response = await fetch(url + "selectCxC", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+              bd,  empresa
+            })
+        });
+
+        if (!response.ok) throw new Error('Error al obtener los datos.');
+        const data = await response.json();
+        if (data && data.length > 0) {
+        cuentasCxC =data
+       
+        }
+    } catch (error) {
+        console.error('Error al obtener los datos:', error);
+    }
+}
+async function fetchDataCxP() {
+    try {
+        // Llama al endpoint con las fechas como parámetros
+        const response = await fetch(url + "selectCxP", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+              bd,  empresa
+            })
+        });
+
+        if (!response.ok) throw new Error('Error al obtener los datos.');
+        const data = await response.json();
+        if (data && data.length > 0) {
+        cuentasCxP =data
+       
+        }
+    } catch (error) {
+        console.error('Error al obtener los datos:', error);
+    }
+}
+
 function cargarDatos2(fechaInicio, fechaFin) {
     if (fechaInicio && fechaFin) {
         // 1. Mostrar el cargando
@@ -80,18 +175,58 @@ async function fetchData2(fechaInicio, fechaFin) {
         console.error('Error al obtener los datos:', error);
     }
 }
+async function fetchDataInv(fechaInicio, fechaFin) {
+    const session = JSON.parse(localStorage.getItem("session") || "{}");
+    try {
+        // Llama al endpoint con las fechas como parámetros
+        const response = await fetch(url + "inventario", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                bd,empresa,
+                fi:fechaInicio,
+                ff:fechaFin,
+                vendedor:(session.vend ?? "").toString()
+            })
+        });
+
+        if (!response.ok) throw new Error('Error al obtener los datos.');
+        const data = await response.json();
+        // Guardar datos en localStorage para acceder desde otra página
+        localStorage.setItem("tablaDatos", JSON.stringify(data));
+         // Actualizar las tarjetas dinámicamente
+    
+    } catch (error) {
+        console.error('Error al obtener los datos:', error);
+    }
+}
+
 function actualizarTarjetas(data) {
     // 1. Cálculos financieros
     let totalVenta = 0;
     let totalCosto = 0;
     let totalConIva = 0;
     let totalUnidades = 0;
+    let cxc = 0;
+    let cxp = 0;
 
     data.forEach(item => {
         totalVenta += parseFloat(item.TOTAL || 0);
         totalCosto += parseFloat(item.COSTO_TOTAL || 0);
         totalConIva += parseFloat(item.TOTALCONIMPUESTO || 0);
         totalUnidades += parseFloat(item.CANTIDAD || 0);
+    });
+
+    cuentasCxC.forEach(item => {
+        cxc += parseFloat(item.SALDOA || 0);
+      
+    });
+
+     cuentasCxP.forEach(item => {
+        cxp += parseFloat(item.SALDO || 0);
+      
     });
 
     const utilidad = totalVenta - totalCosto;
@@ -106,6 +241,8 @@ function actualizarTarjetas(data) {
     document.getElementById('kpi-total-iva').innerText = f.format(totalConIva);
     document.getElementById('kpi-costo').innerText = f.format(totalCosto);
     document.getElementById('kpi-unidades').innerText = totalUnidades.toLocaleString();
+    document.getElementById('kpi-cxc').innerText = cxc.toLocaleString();
+    document.getElementById('kpi-cxp').innerText = cxp.toLocaleString();
 }
 
 
@@ -429,6 +566,18 @@ function procesarDatosSucursal(data) {
 
     return sucursales;
 }
+function procesarDatosSucursalInv(data) {
+    const sucursales = {};
+
+    data.forEach(item => {
+        const nombre = item['BODEGA_NOMBRE'] || 'Sin Nombre';
+        const costo = parseFloat(item.COSTO || 0) *  parseFloat(item.EXISTENCIA || 0);
+        
+        sucursales[nombre] = (sucursales[nombre] || 0) + costo;
+    });
+
+    return sucursales;
+}
 
 // Función para crear el gráfico de barras horizontales (se ve mejor para sucursales)
 function crearGraficoSucursales(conteo) {
@@ -509,3 +658,87 @@ function crearGraficoSucursales(conteo) {
         }
     });
 }
+
+// Función para crear el gráfico de barras horizontales (se ve mejor para sucursales)
+function crearGraficoSucursalesInv(conteo) {
+    // 1. Convertir a Array y ORDENAR de mayor a menor
+    const listaOrdenada = Object.entries(conteo)
+        .map(([nombre, valor]) => ({ nombre, valor }))
+        .sort((a, b) => b.valor - a.valor);
+
+    const labels = listaOrdenada.map(item => item.nombre);
+    const valores = listaOrdenada.map(item => item.valor);
+
+    // 2. Definir paleta de colores (tonos profesionales)
+    // Dejamos el último espacio para el rojo intenso
+    const coloresBase = [
+        '#36A2EB', '#4BC0C0', '#FFCE56', '#9966FF', 
+        '#FF9F40', '#2ecc71', '#34495e', '#16a085', '#2980b9'
+    ];
+
+    // 3. Crear el array de colores final
+    const coloresFinales = labels.map((_, index) => {
+        // Si es el último elemento (el de menor venta), asignar Rojo
+        if (index === labels.length - 1) {
+            return '#e74c3c'; // Rojo para la menor venta
+        }
+        // Para los demás, usar la paleta circularmente
+        return coloresBase[index % coloresBase.length];
+    });
+
+    const canvas = document.getElementById('branchChartExistencias');
+    const ctx = canvas.getContext('2d');
+
+    if (canvas.chartInstance) {
+        canvas.chartInstance.destroy();
+    }
+
+    canvas.chartInstance = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: 'Venta Total',
+                data: valores,
+                backgroundColor: coloresFinales,
+                borderWidth: 1
+            }]
+        },
+        plugins: [ChartDataLabels],
+        options: {
+            indexAxis: 'y',
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: false },
+                datalabels: {
+                    anchor: 'end',
+                    align: 'right',
+                    formatter: (value) => {
+                        // Redondeo a 2 decimales
+                        return value.toLocaleString('en-US', { 
+                            minimumFractionDigits: 2, 
+                            maximumFractionDigits: 2 
+                        });
+                    },
+                    color: '#444',
+                    font: { weight: 'bold', size: 11 }
+                }
+            },
+            scales: {
+                x: {
+                    beginAtZero: true,
+                    // Añadimos un margen del 20% al final para que el número no se encime
+                    suggestedMax: Math.max(...valores) * 1.2,
+                    ticks: {
+                        callback: function(value) { return '$' + value.toLocaleString(); }
+                    }
+                }
+            }
+        }
+    });
+}
+
+
+
+// Hacer la función accesible globalmente
